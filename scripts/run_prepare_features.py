@@ -20,12 +20,12 @@ def main():
 
     # 1) Load clean prices
     prices = load_prices()
-    print("✅ Prices loaded")
+    print("Prices loaded")
     print("Shape:", prices.shape)
 
     # 2) Compute technical features
     features = compute_technical_features(prices)
-    print("✅ Technical features computed")
+    print("Technical features computed")
     print("Shape:", features.shape)
     print("Columns example:", list(features.columns)[:10])
 
@@ -33,7 +33,7 @@ def main():
     out_path = PROCESSED_DIR / "features_technical.csv"
     features.to_csv(out_path)
 
-    print("\n💾 Saved technical features to:", out_path)
+    print("\nSaved technical features to:", out_path)
 
 
 if __name__ == "__main__":
