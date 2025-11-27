@@ -1,2 +1,2 @@
-Total Return,Volatility (daily std),"Sharpe (rf=0, daily)"
+total_return,daily_volatility,daily_sharpe
 0.40579249204010526,0.009760095891878111,0.14396120268744572
