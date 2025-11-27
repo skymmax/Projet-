@@ -15,3 +15,7 @@ REPORT_TABLE_DIR = PROJECT_ROOT / "reports" / "tables"
 TICKERS = ["AAPL", "MSFT", "AMZN", "GOOGL", "META"]  # 5 tech stocks
 TEST_RATIO = 0.2
 SEED = 42
+
+
+MODELS_DIR = PROJECT_ROOT / "models"
+PPO_MODEL_PATH = MODELS_DIR / "ppo_portfolio"

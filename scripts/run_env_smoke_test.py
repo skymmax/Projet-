@@ -46,7 +46,7 @@ def main():
         done = terminated or truncated
         steps += 1
 
-    print("✅ Smoke test terminé")
+    print("Smoke test terminé")
     print("Nombre d'étapes simulées :", steps)
     print("Valeur finale du portefeuille :", round(info["portfolio_value"], 4))
 
