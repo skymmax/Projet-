@@ -113,7 +113,7 @@ def evaluate_ppo() -> None:
     fig_path = REPORT_FIG_DIR / "equity_ppo_vs_baseline_test.png"
     plt.savefig(fig_path)
 
-    print("✅ Evaluation terminée")
+    print("Evaluation terminée")
     print("Métriques baseline :", metrics_baseline)
     print("Métriques PPO      :", metrics_ppo)
     print("Tableau métriques  :", metrics_path)
