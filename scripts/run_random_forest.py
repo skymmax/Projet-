@@ -93,6 +93,11 @@ def main():
     print("Metrics:\n", metrics_df)
     print("Tableau métriques :", metrics_path)
     print("Figure :", fig_path)
+    
+    print("=== Feature Selection (ANOVA) Results ===")
+    for t in TICKERS:
+        print(f"{t}: {meta[t]['selected_features']}")
+
 
 
 if __name__ == "__main__":
