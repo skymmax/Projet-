@@ -10,7 +10,7 @@ REPORT_FIG_DIR = PROJECT_ROOT / "reports" / "figures"
 REPORT_TABLE_DIR = PROJECT_ROOT / "reports" / "tables"
 
 # Finance / dataset
-TICKERS = ["AAPL", "MSFT", "AMZN", "GOOGL"]  # Example tickers 4 minimum
+TICKERS = ["AAPL", "MSFT", "AMZN", "GOOGL","FB"]  # Example tickers 4 minimum
 
 # Global time period for the project
 START_DATE = "2013-01-01"   # début de l’historique

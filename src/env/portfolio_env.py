@@ -24,7 +24,7 @@ class PortfolioEnv(gym.Env):
         features: pd.DataFrame | None = None,
         initial_capital: float = 1.0,
         transaction_cost: float = 0.0,
-        drawdown_penalty: float = 0.01,     # alpha: strength of drawdown penalty
+        drawdown_penalty: float = 0.1,     # alpha: strength of drawdown penalty
         max_weight_per_asset: float = 0.4, # allocation constraint (e.g. 40% max)
     ):
         super().__init__()
