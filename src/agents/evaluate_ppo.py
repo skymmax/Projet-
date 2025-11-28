@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-from src.config import REPORT_FIG_DIR, REPORT_TABLE_DIR, PPO_MODEL_PATH
+from src.config import REPORT_FIG_DIR, REPORT_TABLE_DIR, PPO_MODEL_PATH, TICKERS
 from src.data.load_data import load_prices
 from src.data.preprocess import split_train_test
 from src.features.technical_indicators import compute_technical_features
@@ -68,6 +68,7 @@ def evaluate_ppo() -> None:
 
     portfolio_values = []
     dates = []
+    weights_list = []  # NEW: store allocation over time
 
     while not done:
         action, _ = model.predict(obs, deterministic=True)
@@ -77,12 +78,25 @@ def evaluate_ppo() -> None:
 
         portfolio_values.append(info["portfolio_value"])
         dates.append(info["date"])
+        if "weights" in info:
+            weights_list.append(info["weights"])
 
     equity_ppo = pd.Series(
         portfolio_values,
         index=pd.to_datetime(dates),
         name="equity_ppo",
     )
+
+    # NEW: save weights over time if available
+    if weights_list:
+        weights_df = pd.DataFrame(
+            weights_list,
+            index=pd.to_datetime(dates),
+            columns=TICKERS,
+        )
+        weights_path = REPORT_TABLE_DIR / "ppo_weights_test.csv"
+        weights_df.to_csv(weights_path)
+        print("Saved PPO weights time-series to:", weights_path)
 
     # 6) Baseline equity on same dates
     equity_baseline_full = equity_curve_equal_weight(prices_test_aligned)
@@ -118,6 +132,20 @@ def evaluate_ppo() -> None:
     print("Métriques PPO      :", metrics_ppo)
     print("Tableau métriques  :", metrics_path)
     print("Figure             :", fig_path)
+    
+        # 10) Plot allocation over time (stacked area)
+    if weights_list:
+        plt.figure(figsize=(10, 5))
+        weights_df.plot.area()
+        plt.title("PPO Portfolio Weights over Time (Test Set)")
+        plt.ylabel("Weight")
+        plt.ylim(0.0, 1.0)
+        plt.grid(axis="y", alpha=0.3)
+        plt.legend(title="Ticker", loc="upper left")
+        alloc_fig_path = REPORT_FIG_DIR / "ppo_weights_allocation_test.png"
+        plt.savefig(alloc_fig_path)
+        print("Allocation figure:", alloc_fig_path)
+
 
 
 def main():
