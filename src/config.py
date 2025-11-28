@@ -12,7 +12,7 @@ REPORT_FIG_DIR = PROJECT_ROOT / "reports" / "figures"
 REPORT_TABLE_DIR = PROJECT_ROOT / "reports" / "tables"
 
 # Finance / dataset
-TICKERS = ["AAPL", "MSFT", "AMZN", "GOOGL", "META"]  # 5 tech stocks
+TICKERS = ["AAPL", "MSFT", "AMZN", "GOOGL"]  
 TEST_RATIO = 0.2
 SEED = 42
 

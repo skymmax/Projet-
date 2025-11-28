@@ -105,53 +105,56 @@ def backtest_rf_portfolio(
     """
     Backtest a long-only RF-based portfolio on the test period.
 
-    For each test date:
-        - each model predicts P(UP) for its own asset
-        - weights are proportional to P(UP) (if all zero -> equal weight)
-        - portfolio return is the weighted sum of next-day returns
+    Vectorized version:
+        - for each ticker, compute P(UP) for all test dates at once
+        - build a matrix of probabilities and a matrix of next-day returns
+        - iterate once over time to compute the portfolio equity.
 
     Returns:
         equity: pd.Series of portfolio value over time on the common test index.
     """
     tickers = list(models.keys())
 
-    # Common index across all tickers' test sets
+    # 1) Common index across all tickers' test sets
     common_index = None
     for ticker in tickers:
         idx = meta[ticker]["X_test"].index
         common_index = idx if common_index is None else common_index.intersection(idx)
 
     common_index = common_index.sort_values()
+    n_dates = len(common_index)
+    n_assets = len(tickers)
 
+    # 2) Matrices prob_up[date, asset] and returns_next[date, asset]
+    prob_matrix = np.zeros((n_dates, n_assets), dtype=float)
+    ret_matrix = np.zeros((n_dates, n_assets), dtype=float)
+
+    for j, ticker in enumerate(tickers):
+        X_test_full = meta[ticker]["X_test"].loc[common_index]
+        ret_next_full = meta[ticker]["ret_next_test"].loc[common_index]
+
+        # Predict P(UP) for all dates at once (no loop on dates)
+        proba_full = models[ticker].predict_proba(X_test_full)[:, 1]
+
+        prob_matrix[:, j] = proba_full
+        ret_matrix[:, j] = ret_next_full.values
+
+    # 3) Iterate over time to compute equity curve
     equity_values = []
     current_value = initial_capital
 
-    for date in common_index:
-        prob_up_list = []
-        ret_next_list = []
+    for i, date in enumerate(common_index):
+        probs = prob_matrix[i, :]
+        rets = ret_matrix[i, :]
 
-        for ticker in tickers:
-            X_test = meta[ticker]["X_test"]
-            ret_next_test = meta[ticker]["ret_next_test"]
-
-            x_row = X_test.loc[date].values.reshape(1, -1)
-            proba = models[ticker].predict_proba(x_row)[0, 1]  # P(class=1, UP)
-
-            prob_up_list.append(proba)
-            ret_next_list.append(ret_next_test.loc[date])
-
-        prob_up = np.array(prob_up_list, dtype=float)
-        returns_next = np.array(ret_next_list, dtype=float)
-
-        # Convert probabilities to weights (long-only)
-        if prob_up.sum() <= 0:
-            weights = np.full_like(prob_up, 1.0 / len(prob_up))
+        # Convert probabilities to weights
+        if probs.sum() <= 0:
+            weights = np.full_like(probs, 1.0 / len(probs))
         else:
-            weights = prob_up / prob_up.sum()
+            weights = probs / probs.sum()
 
-        # Portfolio return for this step
-        portfolio_ret = float((weights * returns_next).sum())
-
+        # Portfolio return at this step
+        portfolio_ret = float((weights * rets).sum())
         current_value *= (1.0 + portfolio_ret)
         equity_values.append(current_value)
 
