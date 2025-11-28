@@ -6,6 +6,8 @@ import kagglehub
 
 from src.config import RAW_DIR, TICKERS
 from src.data.preprocess import clean_prices
+from src.config import START_DATE, END_DATE
+
 
 
 def download_sp500_csv() -> Path:
@@ -51,4 +53,9 @@ def load_prices() -> pd.DataFrame:
     df_raw = load_raw_sp500()
     prices = build_prices(df_raw)
     prices = clean_prices(prices)
+    
+    prices = prices.sort_index()
+
+    prices = prices.loc[START_DATE:END_DATE]
+    
     return prices
