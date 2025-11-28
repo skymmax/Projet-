@@ -1,0 +1,32 @@
+✔ Ajout 1 (OBLIGATOIRE) :
+Un modèle supervisé vu en cours
+
+➡ Random Forest (Bagging, Lesson 6)
+➡ Ou Decision Tree (Lesson 5)
+➡ Ou SVM (Lesson 2)
+
+C’est simple, rapide, et essentiel pour les consignes.
+
+✔ Ajout 2 (OBLIGATOIRE) :
+Feature selection du cours
+
+➡ ANOVA F-test
+➡ Mutual Information
+➡ LASSO
+
+Très simple à intégrer dans ton pipeline.
+
+✔ Ajout 3 (OBLIGATOIRE) :
+Hyperparameter search (Grid Search)
+
+Même une mini-grille suffit, par exemple sur Random Forest.
+
+✔ Ajout 4 (OPTION FINANCE — CONSEILLÉ) :
+Walk-forward (time-series cross-validation)
+
+Très apprécié.
+
+✔ Ajout 5 (OPTION — renforce le projet) :
+Baseline Risk Parity
+
+Complément parfait de Markowitz.
