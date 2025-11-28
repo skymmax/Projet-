@@ -45,10 +45,20 @@ def main():
         features=features,
         tickers=TICKERS,
         train_end_date=train_end_date,
-        n_estimators=200,
+        n_estimators=200,        # valeurs par défaut (si use_grid_search=False)
         max_depth=None,
         random_state=42,
+        top_k_features=5,
+        use_grid_search=True,    # NEW: on active le GridSearch
     )
+
+    print("=== Feature Selection (ANOVA) Results ===")
+    for t in TICKERS:
+        print(f"{t}: {meta[t]['selected_features']}")
+
+    print("\n=== Random Forest best hyperparameters (GridSearchCV) ===")
+    for t in TICKERS:
+        print(f"{t}: {meta[t]['best_params']}")
 
     # 4) Backtest RF portfolio on test period
     equity_rf = backtest_rf_portfolio(models, meta)
