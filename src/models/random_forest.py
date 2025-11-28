@@ -6,6 +6,9 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 
+from src.features.feature_selection import anova_feature_selection
+from sklearn.model_selection import GridSearchCV
+
 
 def build_rf_data_for_ticker(
     prices: pd.DataFrame,
@@ -49,7 +52,7 @@ def build_rf_data_for_ticker(
     return X_train, y_train, X_test, ret_next_test
 
 
-from src.features.feature_selection import anova_feature_selection
+
 
 def train_random_forest_models(
     prices: pd.DataFrame,
@@ -59,19 +62,38 @@ def train_random_forest_models(
     n_estimators: int = 200,
     max_depth: int | None = None,
     random_state: int = 42,
-    top_k_features: int = 5,   # NEW
+    top_k_features: int = 5,
+    use_grid_search: bool = True,   # NEW
 ) -> Tuple[Dict[str, RandomForestClassifier], Dict[str, dict]]:
+    """
+    Train one RandomForestClassifier per ticker to predict next-day UP/DOWN.
 
+    If use_grid_search is True, perform a small GridSearchCV on:
+        - n_estimators
+        - max_depth
+        - min_samples_split
+    using 3-fold CV and accuracy as scoring.
+
+    Returns:
+        models: dict[ticker] -> trained RandomForestClassifier
+        meta:   dict[ticker] -> {
+                    "X_test": X_test (with selected features),
+                    "ret_next_test": ret_next_test,
+                    "selected_features": selected feature names,
+                    "train_size": len(X_train),
+                    "best_params": best hyperparameters (if grid search),
+                }
+    """
     models: Dict[str, RandomForestClassifier] = {}
     meta: Dict[str, dict] = {}
 
     for ticker in tickers:
-        # Build dataset
+        # 1) Build dataset
         X_train_full, y_train, X_test_full, ret_next_test = build_rf_data_for_ticker(
             prices, features, ticker, train_end_date
         )
 
-        # --- NEW: Select top-k features using ANOVA ---
+        # 2) Feature selection (ANOVA)
         selected_features = anova_feature_selection(
             X_train_full,
             y_train,
@@ -81,14 +103,41 @@ def train_random_forest_models(
         X_train = X_train_full[selected_features]
         X_test = X_test_full[selected_features]
 
-        # Train RF
-        clf = RandomForestClassifier(
-            n_estimators=n_estimators,
-            max_depth=max_depth,
-            random_state=random_state,
-            n_jobs=-1,
-        )
-        clf.fit(X_train, y_train)
+        # 3) Train RF (with or without GridSearchCV)
+        best_params = None
+
+        if use_grid_search:
+            param_grid = {
+                "n_estimators": [100, 200, 500],
+                "max_depth": [None, 5, 10],
+                "min_samples_split": [2, 5],
+            }
+
+            base_rf = RandomForestClassifier(
+                random_state=random_state,
+                n_jobs=-1,
+            )
+
+            grid = GridSearchCV(
+                estimator=base_rf,
+                param_grid=param_grid,
+                cv=3,
+                scoring="accuracy",
+                n_jobs=-1,
+                verbose=0,
+            )
+
+            grid.fit(X_train, y_train)
+            clf = grid.best_estimator_
+            best_params = grid.best_params_
+        else:
+            clf = RandomForestClassifier(
+                n_estimators=n_estimators,
+                max_depth=max_depth,
+                random_state=random_state,
+                n_jobs=-1,
+            )
+            clf.fit(X_train, y_train)
 
         models[ticker] = clf
         meta[ticker] = {
@@ -96,6 +145,7 @@ def train_random_forest_models(
             "ret_next_test": ret_next_test,
             "selected_features": selected_features,
             "train_size": len(X_train),
+            "best_params": best_params,
         }
 
     return models, meta

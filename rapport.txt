@@ -1,0 +1,12 @@
+
+
+
+
+
+
+**To integrate the supervised learning concepts taught during the course (Lesson 7: Feature Selection) we applied ANOVA F-test to select the most informative features for each asset before training the Random Forest models.
+For each ticker, the ANOVA procedure consistently selected MA20, MA60, the daily return, the current price, and 20-day volatility. These features correspond to classical financial predictors related to momentum and short-term risk.
+
+After feature selection, the Random Forest portfolio achieved a total return of 37.35% with a Sharpe ratio of 0.1345, outperforming the Markowitz minimum variance portfolio (35.1%) while remaining less efficient than the Equal-Weight benchmark in this bullish market regime.
+
+Feature selection reduced the dimensionality of the problem without degrading performance, confirming that ANOVA improves model interpretability and robustness while preventing overfitting.”*
