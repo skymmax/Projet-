@@ -1,6 +1,14 @@
 # src/agents/evaluate_ppo.py
+"""
+Evaluate the trained PPO agent on the test set and compare it
+to the Equal-Weight Buy & Hold baseline.
 
-from pathlib import Path
+Outputs
+- metrics_test_ppo_vs_baseline.csv
+- equity_ppo_vs_baseline_test.png
+- ppo_weights_test.csv
+- ppo_weights_allocation_test.png
+"""
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -18,10 +26,11 @@ from src.env.portfolio_env import PortfolioEnv
 
 
 def make_test_env(prices_test: pd.DataFrame, features_test: pd.DataFrame):
-    """
-    Create a callable that builds a PortfolioEnv for the test period.
-    Used by DummyVecEnv for evaluation with PPO.
-    """
+   
+    #Return a function that creates a PortfolioEnv for the test period.
+
+   # Used by DummyVecEnv to evaluate the PPO agent.
+    
 
     def _init():
         prices_aligned = prices_test.loc[features_test.index]
@@ -37,10 +46,7 @@ def make_test_env(prices_test: pd.DataFrame, features_test: pd.DataFrame):
 
 
 def evaluate_ppo() -> None:
-    """
-    Evaluate the trained PPO agent on the test set and compare it
-    to the Equal-Weight Buy & Hold baseline.
-    """
+    # Run one test episode with PPO and compare to Equal-Weight.
 
     REPORT_FIG_DIR.mkdir(parents=True, exist_ok=True)
     REPORT_TABLE_DIR.mkdir(parents=True, exist_ok=True)
@@ -49,20 +55,20 @@ def evaluate_ppo() -> None:
     prices = load_prices()
     _, prices_test = split_train_test(prices)
 
-    # 2) Compute technical features on test set
+    # 2) Compute technical features on the test set
     features_test = compute_technical_features(prices_test)
 
     # Align prices to features index (drop warmup period)
     prices_test_aligned = prices_test.loc[features_test.index]
 
-    # 3) Create test environment (vectorized)
+    # 3) Create test environment (vectorized) 
     test_env_fn = make_test_env(prices_test_aligned, features_test)
     vec_env = DummyVecEnv([test_env_fn])
 
-    # 4) Load PPO model
+    #  4) Load PPO model
     model = PPO.load(str(PPO_MODEL_PATH))
 
-    # 5) Rollout one full episode in deterministic mode
+    # 5) Roll out one full episode in deterministic mode
     obs = vec_env.reset()
     done = False
 
@@ -87,7 +93,7 @@ def evaluate_ppo() -> None:
         name="equity_ppo",
     )
 
-    # save weights over time if available
+    #  6 Save weights over time (if available)
     if weights_list:
         weights_df = pd.DataFrame(
             weights_list,
@@ -96,36 +102,26 @@ def evaluate_ppo() -> None:
         )
         weights_path = REPORT_TABLE_DIR / "ppo_weights_test.csv"
         weights_df.to_csv(weights_path)
-        print("Saved PPO weights time-series to:", weights_path)
 
-    # 6) Baseline equity on same dates
+    # 7 Baseline equity on the same dates
     equity_baseline_full = equity_curve_equal_weight(prices_test_aligned)
     equity_baseline = equity_baseline_full.loc[equity_ppo.index]
     equity_baseline.name = "equity_baseline_equal_weight"
 
-    # 7) Compute metrics
+    # 8) Compute metrics
     metrics_baseline = simple_metrics(equity_baseline)
     metrics_ppo = simple_metrics(equity_ppo)
-    
-    print("\n=== METRICS: Buy & Hold (Equal-Weight) ===")
-    for k, v in metrics_baseline.items():
-        print(f"{k:20s}: {v:.6f}")
-
-    print("\n=== METRICS: PPO Reinforcement Learning ===")
-    for k, v in metrics_ppo.items():
-        print(f"{k:20s}: {v:.6f}")
-
 
     metrics_df = pd.DataFrame(
         [metrics_baseline, metrics_ppo],
         index=["baseline_equal_weight", "ppo_rl"],
     )
 
-    # 8) Save metrics table
+    # 9) Save metrics table
     metrics_path = REPORT_TABLE_DIR / "metrics_test_ppo_vs_baseline.csv"
     metrics_df.to_csv(metrics_path)
 
-    # 9) Plot equity curves
+    # 10) Plot equity curves
     plt.figure(figsize=(10, 5))
     equity_baseline.plot(label="Baseline Equal-Weight")
     equity_ppo.plot(label="PPO RL Agent")
@@ -136,13 +132,7 @@ def evaluate_ppo() -> None:
     fig_path = REPORT_FIG_DIR / "equity_ppo_vs_baseline_test.png"
     plt.savefig(fig_path)
 
-    print("Evaluation terminée")
-    print("Métriques baseline :", metrics_baseline)
-    print("Métriques PPO      :", metrics_ppo)
-    print("Tableau métriques  :", metrics_path)
-    print("Figure             :", fig_path)
-    
-        # 10) Plot allocation over time (stacked area)
+    # 11) Plot allocation over time (stacked area)
     if weights_list:
         plt.figure(figsize=(10, 5))
         weights_df.plot.area()
@@ -153,11 +143,15 @@ def evaluate_ppo() -> None:
         plt.legend(title="Ticker", loc="upper left")
         alloc_fig_path = REPORT_FIG_DIR / "ppo_weights_allocation_test.png"
         plt.savefig(alloc_fig_path)
-        print("Allocation figure:", alloc_fig_path)
+    else:
+        alloc_fig_path = None
 
-    # 11) Print comparison table
-    print("\n=== COMPARISON TABLE ===")
-    print(metrics_df)
+    # 12) Short summary in the console
+    print("PPO evaluation finished")
+    print("Metrics file:", metrics_path)
+    print("Equity figure:", fig_path)
+    if alloc_fig_path is not None:
+        print("Allocation figure:", alloc_fig_path)
 
 
 def main():
