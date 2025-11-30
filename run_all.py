@@ -1,13 +1,10 @@
 # run_all.py
-"""
-Master script to run the full pipeline:
 
-1) Prepare features
-2) Run baselines (Equal-Weight, Markowitz)
-3) Train PPO agent
-4) Evaluate PPO vs baselines
-5) Run Random Forest supervised strategy
-"""
+# Master script to run the full pipeline:
+# 1) Prepare features
+# 2) Run baselines (Equal-Weight, Markowitz)
+# 3) Run Random Forest supervised strategy
+# 4) Train and evaluate PPO agent
 
 import subprocess
 import sys
@@ -18,38 +15,31 @@ SCRIPTS_DIR = PROJECT_ROOT / "scripts"
 
 
 def run_step(script_name: str, description: str) -> None:
-    print("\n" + "=" * 80)
+    """Run a single script from the scripts/ folder."""
     print(f"STEP: {description}")
     print(f"Running: {script_name}")
-    print("=" * 80)
 
     script_path = SCRIPTS_DIR / script_name
     result = subprocess.run([sys.executable, str(script_path)], check=True)
 
     if result.returncode == 0:
-        print(f"{description} completed successfully.")
+        print(f" {description} completed successfully")
     else:
-        print(f"{description} finished with return code {result.returncode}.")
+        print(f" {description} finished with return code {result.returncode}")
 
 
-def main():
-    # 1) Data preparation & EDA (optional but useful)
-    run_step("run_prepare_features.py", "Prepare technical features")
-    run_step("run_eda.py", "Run exploratory data analysis")
+def main() -> None:
+    # 1) Data preparation
+    run_step("run_prepare.py", "Prepare technical features")
 
-    # 2) Baseline strategies
-    run_step("run_baseline.py", "Run Equal-Weight baseline")
-    run_step("run_markowitz.py", "Run Markowitz minimum variance portfolio")
+    # 2) Baseline strategies (Equal-Weight and Markowitz)
+    run_step("run_baselines.py", "Run classical baselines")
 
-    # 3) Reinforcement Learning (PPO)
-    run_step("run_train_ppo.py", "Train PPO agent")
-    run_step("run_evaluate_ppo.py", "Evaluate PPO vs Equal-Weight baseline")
-
-    # 4) Supervised learning baseline (Random Forest)
+    # 3) Supervised learning baseline (Random Forest)
     run_step("run_random_forest.py", "Run Random Forest supervised strategy")
-    
-    run_step("run_evaluate_ppo.py", "Evaluate PPO vs baselines and save allocation plots")
 
+    # 4) Reinforcement Learning (PPO: train + evaluate)
+    run_step("run_ppo.py", "Train and evaluate PPO agent")
 
 
 if __name__ == "__main__":
