@@ -1,52 +1,31 @@
 # src/evaluation/metrics.py
+# simple performance metrics used throughout the project
 
 import pandas as pd
 
 
 def compute_max_drawdown(equity: pd.Series) -> float:
-    """
-    Compute the maximum drawdown of a portfolio equity curve.
-
-    Max drawdown = min_t ( equity_t / max_{s<=t}(equity_s) - 1 )
-
-    Returns:
-        A negative float (e.g. -0.25 for -25% max drawdown).
-    """
-    # Cumulative maximum of equity
+    # max drawdown = min over time of equity / rolling peak - 1
     cumulative_max = equity.cummax()
-
-    # Drawdown at each time step
     drawdowns = equity / cumulative_max - 1.0
-
-    # Minimum (most negative) drawdown
-    max_drawdown = float(drawdowns.min())
-
-    return max_drawdown
+    return float(drawdowns.min())
 
 
 def simple_metrics(equity: pd.Series) -> dict:
-    """
-    Compute basic financial metrics from a portfolio equity curve:
-    - total return
-    - daily volatility
-    - daily Sharpe ratio (rf = 0)
-    - max drawdown
-    - Calmar ratio (annualized return / |max drawdown|)
-    """
+    # compute basic portfolio metrics
     returns = equity.pct_change().dropna()
 
-    # Total return over the full period
+    # total return from start to end
     total_return = float(equity.iloc[-1] / equity.iloc[0] - 1)
 
-    # Daily volatility and Sharpe
-    volatility = float(returns.std())  # daily std
+    # daily volatility and sharpe (rf = 0)
+    volatility = float(returns.std())
     sharpe = float(0 if volatility == 0 else returns.mean() / volatility)
 
-    # Max drawdown
-    max_drawdown = compute_max_drawdown(equity)
+    # max drawdown
+    max_dd = compute_max_drawdown(equity)
 
-    # Calmar ratio: annualized return / |max_drawdown|
-    # Approximate 252 trading days per year
+    # annual return approximation (252 trading days)
     n_days = len(equity)
     if n_days > 1:
         annual_return = float(
@@ -55,16 +34,16 @@ def simple_metrics(equity: pd.Series) -> dict:
     else:
         annual_return = 0.0
 
-    if max_drawdown < 0:
-        calmar_ratio = annual_return / abs(max_drawdown)
+    # calmar ratio = annual return / abs (max drawdown)
+    if max_dd < 0:
+        calmar = annual_return / abs(max_dd)
     else:
-        # If no drawdown (theoretically), Calmar is not defined -> set to 0
-        calmar_ratio = 0.0
+        calmar = 0.0
 
     return {
         "total_return": total_return,
         "daily_volatility": volatility,
         "daily_sharpe": sharpe,
-        "max_drawdown": max_drawdown,
-        "calmar_ratio": calmar_ratio,
+        "max_drawdown": max_dd,
+        "calmar_ratio": calmar,
     }
