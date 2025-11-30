@@ -13,7 +13,7 @@ from pathlib import Path
 # ----------------------------------------------------
 
 # List of tickers used in the portfolio
-TICKERS = ["AAPL", "MSFT", "AMZN", "GOOGL", "FB", "T", "GS"]
+TICKERS = ["AAPL", "MSFT", "AMZN", "GOOGL", "FB", "GS"]
 
 # Global time period for the project
 START_DATE = "2013-01-01"   # start of historical data
